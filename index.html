@@ -506,31 +506,6 @@
 				flex-wrap: wrap;
 			}
 
-			.zoom-wrap {
-				flex: 1;
-				min-width: 240px;
-				display: grid;
-				grid-template-columns: 44px 1fr 56px;
-				gap: 10px;
-				align-items: center;
-			}
-
-			.zoom-label {
-				font-size: 12px;
-				color: rgba(255, 255, 255, 0.78);
-			}
-
-			#zoomRange {
-				width: 100%;
-			}
-
-			.zoom-value {
-				font-size: 12px;
-				color: rgba(255, 255, 255, 0.82);
-				text-align: right;
-				font-variant-numeric: tabular-nums;
-			}
-
 			.btn.scan-icon {
 				display: inline-flex;
 				align-items: center;
@@ -645,11 +620,6 @@
 				</div>
 				<div id="cameraControls" class="camera-controls" style="display: none">
 					<button id="torchBtn" class="btn" type="button" style="display: none">Đèn: Tắt</button>
-					<div id="zoomWrap" class="zoom-wrap" style="display: none">
-						<div class="zoom-label">Zoom</div>
-						<input id="zoomRange" type="range" min="1" max="1" step="0.1" value="1" />
-						<div id="zoomValue" class="zoom-value">1.0x</div>
-					</div>
 				</div>
 				<div id="reader"></div>
 				<div id="cameraInfo" class="camera-info">Hướng camera vào mã vạch để quét tự động</div>
@@ -707,9 +677,6 @@
 				closeCameraBtn: document.getElementById("closeCameraBtn"),
 				cameraControls: document.getElementById("cameraControls"),
 				torchBtn: document.getElementById("torchBtn"),
-				zoomWrap: document.getElementById("zoomWrap"),
-				zoomRange: document.getElementById("zoomRange"),
-				zoomValue: document.getElementById("zoomValue"),
 				cameraInfo: document.getElementById("cameraInfo"),
 				tbody: document.getElementById("tbody"),
 				rowTemplate: document.getElementById("rowTemplate"),
@@ -722,7 +689,6 @@
 
 			let html5QrcodeScanner = null;
 			let cameraTorchOn = false;
-			let cameraZoomLast = null;
 
 			const CATALOG_SETTINGS_KEY = "fill-counter:catalog-settings:v1";
 			const CATALOG_CACHE_KEY = "fill-counter:catalog-cache:v1";
@@ -1079,10 +1045,8 @@
 			async function setupCameraAdvancedControls() {
 				// Reset UI
 				cameraTorchOn = false;
-				cameraZoomLast = null;
 				if (els.cameraControls) els.cameraControls.style.display = "none";
 				if (els.torchBtn) els.torchBtn.style.display = "none";
-				if (els.zoomWrap) els.zoomWrap.style.display = "none";
 
 				if (!html5QrcodeScanner || typeof html5QrcodeScanner.getRunningTrackCapabilities !== "function") {
 					setCameraInfo("Tip: Nếu máy hỗ trợ, sẽ hiện Zoom/Đèn ở đây.");
@@ -1123,26 +1087,15 @@
 					};
 				}
 
-				if (hasZoom && els.zoomWrap && els.zoomRange && els.zoomValue) {
-					els.zoomWrap.style.display = "grid";
+				// Set zoom mặc định 2.0x (nếu thiết bị hỗ trợ zoom qua trình duyệt)
+				if (hasZoom) {
 					const zMin = caps.zoom.min;
 					const zMax = caps.zoom.max;
-					const step = typeof caps.zoom.step === "number" && caps.zoom.step > 0 ? caps.zoom.step : 0.1;
-					els.zoomRange.min = String(zMin);
-					els.zoomRange.max = String(zMax);
-					els.zoomRange.step = String(step);
-					// default: 1x nếu nằm trong range, nếu không thì lấy min
-					const defaultZoom = (1 >= zMin && 1 <= zMax) ? 1 : zMin;
-					els.zoomRange.value = String(defaultZoom);
-					els.zoomValue.textContent = `${Number(defaultZoom).toFixed(1)}x`;
-
-					els.zoomRange.oninput = async () => {
-						const z = Number(els.zoomRange.value);
-						els.zoomValue.textContent = `${z.toFixed(1)}x`;
-						// debounce-ish: tránh spam apply
-						cameraZoomLast = z;
-						await tryApplyVideoConstraints({ advanced: [{ zoom: z }] });
-					};
+					const z = Math.max(zMin, Math.min(zMax, 2));
+					const ok = await tryApplyVideoConstraints({ advanced: [{ zoom: z }] });
+					if (ok) {
+						setCameraInfo(`Tip: Đã set zoom ${Number(z).toFixed(1)}x. Bạn có thể bật Đèn (nếu có).`);
+					}
 				}
 			}
 
@@ -1211,10 +1164,8 @@
 					});
 				}
 				cameraTorchOn = false;
-				cameraZoomLast = null;
 				if (els.cameraControls) els.cameraControls.style.display = "none";
 				if (els.torchBtn) els.torchBtn.style.display = "none";
-				if (els.zoomWrap) els.zoomWrap.style.display = "none";
 				els.cameraOverlay.classList.remove('active');
 			}
 
