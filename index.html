@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="vi">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Fill Product</title>
+		<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+		<style>
+			:root {
+				--bg: #0b1220;
+				--panel: rgba(255, 255, 255, 0.06);
+				--panel2: rgba(255, 255, 255, 0.08);
+				--border: rgba(255, 255, 255, 0.12);
+				--text: rgba(255, 255, 255, 0.92);
+				--muted: rgba(255, 255, 255, 0.65);
+				--accent: #7c3aed;
+				--danger: #ef4444;
+				--ok: #22c55e;
+				--shadow: 0 14px 50px rgba(0, 0, 0, 0.35);
+				--radius: 14px;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				height: 100%;
+			}
+
+			body {
+				margin: 0;
+				font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+					"Segoe UI Emoji";
+				color: var(--text);
+				background:
+					radial-gradient(1200px 600px at 20% 10%, rgba(124, 58, 237, 0.35), transparent 55%),
+					radial-gradient(900px 500px at 85% 25%, rgba(34, 197, 94, 0.18), transparent 55%),
+					radial-gradient(900px 500px at 30% 95%, rgba(59, 130, 246, 0.18), transparent 55%),
+					var(--bg);
+			}
+
+			.container {
+				max-width: 1100px;
+				margin: 0 auto;
+				padding: 28px 18px 48px;
+			}
+
+			header {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 16px;
+				margin-bottom: 18px;
+			}
+
+			.title {
+				display: grid;
+				gap: 6px;
+			}
+
+			h1 {
+				margin: 0;
+				font-size: 22px;
+				font-weight: 750;
+				letter-spacing: 0.2px;
+			}
+
+			.subtitle {
+				color: var(--muted);
+				font-size: 13px;
+				line-height: 1.45;
+			}
+
+			.panel {
+				background: linear-gradient(180deg, var(--panel), rgba(255, 255, 255, 0.035));
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				box-shadow: var(--shadow);
+				overflow: hidden;
+			}
+
+			.toolbar {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				padding: 14px 14px;
+				border-bottom: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.03);
+			}
+
+			.toolbar-left,
+			.toolbar-right {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				align-items: center;
+			}
+
+			.field {
+				display: grid;
+				gap: 6px;
+			}
+
+			label {
+				font-size: 12px;
+				color: var(--muted);
+			}
+
+			input[type="text"],
+			input[type="search"],
+			input[type="number"] {
+				height: 38px;
+				padding: 8px 10px;
+				border-radius: 12px;
+				border: 1px solid var(--border);
+				background: rgba(0, 0, 0, 0.22);
+				color: var(--text);
+				outline: none;
+			}
+
+			input[type="url"] {
+				height: 38px;
+				padding: 8px 10px;
+				border-radius: 12px;
+				border: 1px solid var(--border);
+				background: rgba(0, 0, 0, 0.22);
+				color: var(--text);
+				outline: none;
+			}
+
+			input[type="text"]::placeholder,
+			input[type="search"]::placeholder,
+			input[type="number"]::placeholder,
+			input[type="url"]::placeholder {
+				color: rgba(255, 255, 255, 0.4);
+			}
+
+			input:focus {
+				border-color: rgba(124, 58, 237, 0.65);
+				box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+			}
+
+			.btn {
+				height: 38px;
+				padding: 0 12px;
+				border-radius: 12px;
+				border: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.06);
+				color: var(--text);
+				cursor: pointer;
+				user-select: none;
+			}
+
+			.btn:hover {
+				background: rgba(255, 255, 255, 0.09);
+			}
+
+			.btn:active {
+				transform: translateY(1px);
+			}
+
+			.btn.primary {
+				border-color: rgba(124, 58, 237, 0.55);
+				background: rgba(124, 58, 237, 0.2);
+			}
+
+			.btn.primary:hover {
+				background: rgba(124, 58, 237, 0.28);
+			}
+
+			.btn.danger {
+				border-color: rgba(239, 68, 68, 0.55);
+				background: rgba(239, 68, 68, 0.14);
+			}
+
+			.btn.danger:hover {
+				background: rgba(239, 68, 68, 0.2);
+			}
+
+			.btn.ghost {
+				background: transparent;
+			}
+
+			.stats {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				align-items: center;
+				color: var(--muted);
+				font-size: 13px;
+			}
+
+			.badge {
+				border: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.05);
+				padding: 6px 10px;
+				border-radius: 999px;
+			}
+
+			table {
+				width: 100%;
+				border-collapse: collapse;
+			}
+
+			thead th {
+				text-align: left;
+				font-size: 12px;
+				color: var(--muted);
+				font-weight: 650;
+				padding: 12px 14px;
+				border-bottom: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.03);
+			}
+
+			thead th.col-qty {
+				text-align: center;
+			}
+
+			tbody td {
+				padding: 12px 14px;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+				vertical-align: middle;
+			}
+
+			tbody td.col-qty {
+				text-align: center;
+			}
+
+			tbody .muted {
+				font-size: 13px;
+			}
+
+			tbody .qty button {
+				height: 32px;
+				min-width: 38px;
+				font-size: 12px;
+				padding: 0 8px;
+			}
+
+			tbody .qty .qty-display {
+				min-width: 46px;
+				padding: 6px 10px;
+				font-size: 14px;
+			}
+
+			tbody .trash {
+				width: 34px;
+				height: 34px;
+			}
+
+			tbody .trash.btn {
+				height: 34px;
+			}
+
+			tbody tr:hover {
+				background: rgba(255, 255, 255, 0.03);
+			}
+
+			.col-name {
+				width: 35%;
+			}
+
+			.col-qty {
+				width: 40%;
+			}
+
+			.col-shelf {
+				width: 25%;
+			}
+
+			.qty {
+				display: flex;
+				gap: 6px;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.qty button {
+				min-width: 44px;
+				padding: 0 8px;
+				display: inline-grid;
+				place-items: center;
+				font-size: 14px;
+				font-weight: 650;
+				line-height: 1;
+			}
+
+			.qty .qty-display {
+				min-width: 56px;
+				padding: 8px 12px;
+				text-align: center;
+				font-size: 16px;
+				font-weight: 750;
+				border-radius: 10px;
+				background: rgba(124, 58, 237, 0.15);
+				border: 1px solid rgba(124, 58, 237, 0.35);
+			}
+
+			.muted {
+				color: var(--muted);
+			}
+
+			.row-actions {
+				display: flex;
+				justify-content: flex-end;
+			}
+
+			.trash {
+				width: 38px;
+				height: 38px;
+				display: inline-grid;
+				place-items: center;
+			}
+
+			.footer {
+				padding: 12px 14px 14px;
+				color: var(--muted);
+				font-size: 12px;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+				align-items: center;
+				justify-content: space-between;
+			}
+
+			.notice {
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.75);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(0, 0, 0, 0.18);
+				padding: 8px 10px;
+				border-radius: 12px;
+			}
+
+			.notice.ok {
+				border-color: rgba(34, 197, 94, 0.3);
+			}
+
+			.notice.warn {
+				border-color: rgba(239, 68, 68, 0.35);
+			}
+
+			details.settings {
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(255, 255, 255, 0.03);
+				padding: 10px 12px;
+				border-radius: 12px;
+			}
+
+			details.settings > summary {
+				cursor: pointer;
+				user-select: none;
+				color: rgba(255, 255, 255, 0.78);
+				font-weight: 600;
+			}
+
+			.settings-grid {
+				margin-top: 10px;
+				display: grid;
+				grid-template-columns: 1fr;
+				gap: 10px;
+			}
+
+			.settings-grid .row {
+				display: grid;
+				grid-template-columns: 140px 1fr;
+				gap: 10px;
+				align-items: center;
+			}
+
+			@media (max-width: 760px) {
+				.settings-grid .row {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			.kbd {
+				font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+				font-size: 11px;
+				border: 1px solid var(--border);
+				background: rgba(0, 0, 0, 0.25);
+				padding: 2px 6px;
+				border-radius: 8px;
+				color: rgba(255, 255, 255, 0.82);
+			}
+
+			@media (max-width: 760px) {
+				input,
+				select,
+				textarea {
+					font-size: 16px;
+				}
+
+				.col-name {
+					width: 35%;
+				}
+				.col-qty {
+					width: 40%;
+				}
+				.col-shelf {
+					width: 25%;
+				}
+				.qty button {
+					min-width: 34px;
+					padding: 0 6px;
+					font-size: 12px;
+				}
+				.qty .qty-display {
+					min-width: 42px;
+					padding: 6px 8px;
+					font-size: 13px;
+				}
+				thead th,
+				tbody td {
+					padding-left: 10px;
+					padding-right: 10px;
+				}
+			}
+
+			/* Camera modal */
+			.camera-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.92);
+				z-index: 9999;
+				display: none;
+				align-items: center;
+				justify-content: center;
+				padding: 20px;
+			}
+
+			.camera-overlay.active {
+				display: flex;
+			}
+
+			.camera-modal {
+				background: var(--panel);
+				border: 1px solid var(--border);
+				border-radius: var(--radius);
+				padding: 20px;
+				max-width: 520px;
+				width: 100%;
+				position: relative;
+			}
+
+			.camera-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-bottom: 16px;
+			}
+
+			.camera-header h3 {
+				margin: 0;
+				font-size: 18px;
+				font-weight: 700;
+			}
+
+			.camera-close {
+				width: 36px;
+				height: 36px;
+				display: grid;
+				place-items: center;
+				border-radius: 8px;
+				border: 1px solid var(--border);
+				background: rgba(255, 255, 255, 0.06);
+				color: var(--text);
+				cursor: pointer;
+				font-size: 20px;
+			}
+
+			.camera-close:hover {
+				background: rgba(255, 255, 255, 0.1);
+			}
+
+			#reader {
+				width: 100%;
+				border-radius: 12px;
+				overflow: hidden;
+				background: #000;
+			}
+
+			.camera-info {
+				margin-top: 12px;
+				padding: 10px;
+				border-radius: 8px;
+				background: rgba(0, 0, 0, 0.3);
+				color: var(--muted);
+				font-size: 13px;
+				text-align: center;
+			}
+
+			.btn.scan-icon {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<div class="stats" aria-live="polite">
+					<span class="badge">Item(s): <b id="statItems">0</b></span>
+					<span class="badge">Total(s): <b id="statTotal">0</b></span>
+				</div>
+			</header>
+
+			<div class="panel">
+				<div class="toolbar">
+					<div class="toolbar-left">
+						<div class="field">
+							<label for="nameInput">Tên hàng</label>
+							<input id="nameInput" type="text" autocomplete="off" />
+						</div>
+						<div class="field">
+							<label for="shelfInput">Kệ</label>
+							<input id="shelfInput" type="text" autocomplete="off" />
+						</div>
+						<div class="field" style="align-self: end">
+							<button id="addBtn" class="btn primary" type="button">Thêm hàng</button>
+						</div>
+						<div class="field">
+							<label for="barcodeInput">Barcode (7 số cuối)</label>
+							<input id="barcodeInput" type="text" inputmode="numeric" autocomplete="off" />
+						</div>
+						<div class="field" style="align-self: end">
+							<button id="scanBtn" class="btn scan-icon" type="button">📷 Quét</button>
+						</div>
+						<div class="field" style="align-self: end">
+							<button id="lookupBtn" class="btn" type="button">Tra</button>
+						</div>
+						<div class="field">
+							<label for="searchInput">Tìm</label>
+							<input id="searchInput" type="search" autocomplete="off" />
+						</div>
+					</div>
+					<div class="toolbar-right">
+						<button id="copyBtn" class="btn" type="button">Copy báo cáo</button>
+						<button id="resetBtn" class="btn danger" type="button">Reset số lượng</button>
+						<button id="clearBtn" class="btn danger" type="button">Xóa danh sách</button>
+					</div>
+				</div>
+
+				<div style="overflow: auto">
+					<table>
+						<thead>
+							<tr>
+								<th class="col-name">Tên hàng</th>
+								<th class="col-qty">Số lượng</th>
+								<th class="col-shelf">Kệ</th>
+								<th style="width: 1%"></th>
+							</tr>
+						</thead>
+						<tbody id="tbody"></tbody>
+					</table>
+				</div>
+
+				<div class="footer">
+					<div id="catalogStatus" class="notice" style="display: none"></div>
+					<details class="settings">
+						<summary>Cài đặt Google Sheet</summary>
+						<div class="settings-grid">
+							<div class="row">
+								<div class="muted">Sheet link</div>
+								<input
+									id="sheetUrlInput"
+									type="url"
+									placeholder="Dán link Google Sheet (edit) hoặc link CSV đã publish"
+									autocomplete="off"
+								/>
+							</div>
+							<div class="row">
+								<div class="muted">Cột bắt buộc</div>
+								<div class="muted">
+									Header cần có: <span class="kbd">barcode7</span>, và <span class="kbd">item name</span> (hoặc <span class="kbd">name</span>).<br />
+									Cột <span class="kbd">shelf</span> là tùy chọn; nếu không có sẽ tự ghép từ <span class="kbd">division</span> / <span class="kbd">category</span> / <span class="kbd">sub category</span>.
+								</div>
+							</div>
+							<div class="row">
+								<div class="muted">Hành động</div>
+								<div style="display: flex; gap: 10px; flex-wrap: wrap">
+									<button id="saveSheetBtn" class="btn" type="button">Lưu URL</button>
+									<button id="refreshCatalogBtn" class="btn" type="button">Tải lại dữ liệu</button>
+									<button id="importCsvBtn" class="btn" type="button">Import .CSV</button>
+									<input id="csvFileInput" type="file" accept=".csv,text/csv" style="display: none" />
+								</div>
+							</div>
+							<div class="muted" style="line-height: 1.5">
+								Nếu bị lỗi CORS/không tải được, dùng Google Apps Script Web App (mình có thể giúp setup).
+							</div>
+						</div>
+					</details>
+				</div>
+			</div>
+		</div>
+
+		<!-- Camera Scanner Modal -->
+		<div id="cameraOverlay" class="camera-overlay">
+			<div class="camera-modal">
+				<div class="camera-header">
+					<h3>Quét mã vạch</h3>
+					<button id="closeCameraBtn" class="camera-close" type="button">✕</button>
+				</div>
+				<div id="reader"></div>
+				<div class="camera-info">Hướng camera vào mã vạch để quét tự động</div>
+			</div>
+		</div>
+
+		<template id="rowTemplate">
+			<tr>
+				<td class="col-name">
+					<div class="muted" data-field="name"></div>
+				</td>
+				<td class="col-qty">
+					<div class="qty">
+						<button class="btn" type="button" data-action="dec5" aria-label="Giảm 5">-5</button>
+						<button class="btn" type="button" data-action="dec" aria-label="Giảm 1">-1</button>
+						<div class="qty-display" data-field="qty" aria-label="Số lượng">0</div>
+						<button class="btn" type="button" data-action="inc" aria-label="Tăng 1">+1</button>
+						<button class="btn" type="button" data-action="inc5" aria-label="Tăng 5">+5</button>
+					</div>
+				</td>
+				<td class="col-shelf">
+					<div class="muted" data-field="shelf"></div>
+				</td>
+				<td>
+					<div class="row-actions">
+						<button class="btn ghost trash" type="button" data-action="remove" aria-label="Xóa dòng">✕</button>
+					</div>
+				</td>
+			</tr>
+		</template>
+
+		<script>
+			const STORAGE_KEY = "fill-counter:v1";
+
+			/** @typedef {{ id: string, name: string, shelf: string, qty: number | null }} Item */
+
+			const els = {
+				nameInput: document.getElementById("nameInput"),
+				shelfInput: document.getElementById("shelfInput"),
+				addBtn: document.getElementById("addBtn"),
+				barcodeInput: document.getElementById("barcodeInput"),
+				scanBtn: document.getElementById("scanBtn"),
+				lookupBtn: document.getElementById("lookupBtn"),
+				searchInput: document.getElementById("searchInput"),
+				copyBtn: document.getElementById("copyBtn"),
+				resetBtn: document.getElementById("resetBtn"),
+				clearBtn: document.getElementById("clearBtn"),
+				catalogStatus: document.getElementById("catalogStatus"),
+				sheetUrlInput: document.getElementById("sheetUrlInput"),
+				saveSheetBtn: document.getElementById("saveSheetBtn"),
+				refreshCatalogBtn: document.getElementById("refreshCatalogBtn"),
+				importCsvBtn: document.getElementById("importCsvBtn"),
+				csvFileInput: document.getElementById("csvFileInput"),
+				cameraOverlay: document.getElementById("cameraOverlay"),
+				closeCameraBtn: document.getElementById("closeCameraBtn"),
+				tbody: document.getElementById("tbody"),
+				rowTemplate: document.getElementById("rowTemplate"),
+				statItems: document.getElementById("statItems"),
+				statTotal: document.getElementById("statTotal"),
+			};
+
+			/** @type {Item[]} */
+			let items = [];
+
+			let html5QrcodeScanner = null;
+
+			const CATALOG_SETTINGS_KEY = "fill-counter:catalog-settings:v1";
+			const CATALOG_CACHE_KEY = "fill-counter:catalog-cache:v1";
+
+			/** @typedef {{ barcode7: string, name: string, shelf: string }} CatalogRow */
+			/** @type {{ sheetCsvUrl: string }} */
+			let catalogSettings = { sheetCsvUrl: "" };
+			/** @type {{ rows: CatalogRow[], fetchedAt: number }} */
+			let catalogCache = { rows: [], fetchedAt: 0 };
+
+			function uid() {
+				return "i_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+			}
+
+			function normalizeText(value) {
+				return (value ?? "").toString().trim();
+			}
+
+			function clampInt(value) {
+				if (value === null || value === undefined || value === "") return null;
+				const n = Number(value);
+				if (!Number.isFinite(n)) return null;
+				return Math.max(0, Math.trunc(n));
+			}
+
+			function save() {
+				localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+			}
+
+			function saveCatalogSettings() {
+				localStorage.setItem(CATALOG_SETTINGS_KEY, JSON.stringify(catalogSettings));
+			}
+
+			function loadCatalogSettings() {
+				try {
+					const raw = localStorage.getItem(CATALOG_SETTINGS_KEY);
+					if (!raw) return;
+					const obj = JSON.parse(raw);
+					if (obj && typeof obj === "object" && typeof obj.sheetCsvUrl === "string") {
+						catalogSettings.sheetCsvUrl = obj.sheetCsvUrl;
+					}
+				} catch {
+					// ignore
+				}
+			}
+
+			function saveCatalogCache() {
+				localStorage.setItem(CATALOG_CACHE_KEY, JSON.stringify(catalogCache));
+			}
+
+			function loadCatalogCache() {
+				try {
+					const raw = localStorage.getItem(CATALOG_CACHE_KEY);
+					if (!raw) return;
+					const obj = JSON.parse(raw);
+					if (!obj || typeof obj !== "object" || !Array.isArray(obj.rows)) return;
+					catalogCache = {
+						rows: obj.rows
+							.filter((r) => r && typeof r === "object")
+							.map((r) => ({
+								barcode7: normalizeBarcode7(r.barcode7),
+								name: normalizeText(r.name),
+								shelf: normalizeText(r.shelf),
+							}))
+							.filter((r) => r.barcode7.length === 7 && (r.name || r.shelf)),
+						fetchedAt: typeof obj.fetchedAt === "number" ? obj.fetchedAt : 0,
+					};
+				} catch {
+					// ignore
+				}
+			}
+
+			function load() {
+				try {
+					const raw = localStorage.getItem(STORAGE_KEY);
+					if (!raw) return false;
+					const parsed = JSON.parse(raw);
+					if (!Array.isArray(parsed)) return false;
+					items = parsed
+						.filter((x) => x && typeof x === "object")
+						.map((x) => ({
+							id: typeof x.id === "string" ? x.id : uid(),
+							name: normalizeText(x.name),
+							shelf: normalizeText(x.shelf),
+							qty: clampInt(x.qty),
+						}))
+						.filter((x) => x.name.length > 0 || x.shelf.length > 0);
+					return true;
+				} catch {
+					return false;
+				}
+			}
+
+			function seedIfEmpty() {
+				// Intentionally disabled: start with empty list.
+				return;
+			}
+
+			function showCatalogStatus(message, kind) {
+				els.catalogStatus.style.display = "block";
+				els.catalogStatus.textContent = message;
+				els.catalogStatus.classList.remove("ok", "warn");
+				if (kind) els.catalogStatus.classList.add(kind);
+			}
+
+			function hideCatalogStatus() {
+				els.catalogStatus.style.display = "none";
+				els.catalogStatus.textContent = "";
+				els.catalogStatus.classList.remove("ok", "warn");
+			}
+
+			function normalizeBarcode7(value) {
+				const digits = (value ?? "").toString().replace(/\D/g, "");
+				if (digits.length === 7) return digits;
+				if (digits.length > 7) return digits.slice(-7);
+				return digits;
+			}
+
+			function parseCsv(text) {
+				// Minimal CSV parser that supports quotes and commas/newlines.
+				const rows = [];
+				let row = [];
+				let cell = "";
+				let inQuotes = false;
+				for (let i = 0; i < text.length; i++) {
+					const ch = text[i];
+					if (inQuotes) {
+						if (ch === '"') {
+							const next = text[i + 1];
+							if (next === '"') {
+								cell += '"';
+								i++;
+							} else {
+								inQuotes = false;
+							}
+						} else {
+							cell += ch;
+						}
+						continue;
+					}
+
+					if (ch === '"') {
+						inQuotes = true;
+						continue;
+					}
+					if (ch === ",") {
+						row.push(cell);
+						cell = "";
+						continue;
+					}
+					if (ch === "\n") {
+						row.push(cell);
+						rows.push(row);
+						row = [];
+						cell = "";
+						continue;
+					}
+					if (ch === "\r") {
+						continue;
+					}
+					cell += ch;
+				}
+				row.push(cell);
+				rows.push(row);
+				return rows.filter((r) => r.some((c) => (c ?? "").toString().trim() !== ""));
+			}
+
+			function buildGoogleSheetCsvCandidates(inputUrl) {
+				const raw = normalizeText(inputUrl);
+				if (!raw) return [];
+				// If user already pasted a direct CSV or script endpoint, use as-is.
+				const likelyDirect = /output=csv|format=csv|tqx=out:csv|\/macros\/s\//i.test(raw);
+				if (likelyDirect) return [raw];
+
+				try {
+					const u = new URL(raw);
+					// Support standard edit URL: https://docs.google.com/spreadsheets/d/{id}/edit?...gid=0
+					const m = u.pathname.match(/\/spreadsheets\/d\/([^/]+)/i);
+					if (!m) return [raw];
+					const sheetId = m[1];
+					const gid = u.searchParams.get("gid") || "0";
+					return [
+						`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${encodeURIComponent(gid)}`,
+						`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${encodeURIComponent(gid)}`,
+					];
+				} catch {
+					return [raw];
+				}
+			}
+
+			async function fetchTextWithFallback(urls) {
+				/** @type {Error[]} */
+				const errors = [];
+				for (const url of urls) {
+					try {
+						const res = await fetch(url, { cache: "no-store" });
+						if (!res.ok) throw new Error(`HTTP ${res.status}`);
+						return await res.text();
+					} catch (e) {
+						errors.push(e instanceof Error ? e : new Error(String(e)));
+					}
+				}
+				const msg = errors.map((e) => e.message).join("; ");
+				throw new Error(msg || "Không tải được.");
+			}
+
+			async function fetchCatalogFromSheet() {
+				const input = normalizeText(catalogSettings.sheetCsvUrl);
+				if (!input) {
+					throw new Error("Chưa dán link Google Sheet/CSV.");
+				}
+				const candidates = buildGoogleSheetCsvCandidates(input);
+				if (candidates.length === 0) {
+					throw new Error("Link không hợp lệ.");
+				}
+				let text;
+				try {
+					text = await fetchTextWithFallback(candidates);
+				} catch (err) {
+					throw new Error(
+						`Không tải được catalog. Nếu bạn dùng link Google Sheet, hãy Publish ra web rồi dùng CSV. (Chi tiết: ${err?.message ?? String(err)})`
+					);
+				}
+				const matrix = parseCsv(text);
+				return parseCatalogRowsFromMatrix(matrix);
+			}
+
+			function parseCatalogRowsFromMatrix(matrix) {
+				if (!Array.isArray(matrix) || matrix.length < 2) throw new Error("CSV trống hoặc thiếu dữ liệu.");
+				const headers = (matrix[0] ?? []).map((h) => normalizeText(h).toLowerCase());
+
+				const idxOfAny = (candidates) => {
+					for (const key of candidates) {
+						const idx = headers.indexOf(key);
+						if (idx !== -1) return idx;
+					}
+					return -1;
+				};
+
+				const idxBarcode = idxOfAny(["barcode7", "barcode", "barcode_7", "barcode 7"]);
+				const idxItemCode = idxOfAny(["item code", "itemcode", "item_code", "code", "sku"]);
+				const idxName = idxOfAny(["name", "item name", "itemname", "item_name", "product name", "product"]);
+				const idxShelf = idxOfAny(["shelf", "ke", "kệ", "location", "shelf name"]);
+				const idxDivision = idxOfAny(["division"]);
+				const idxCategory = idxOfAny(["category"]);
+				const idxSubCategory = idxOfAny(["sub category", "sub-category", "subcategory", "sub_category"]);
+
+				if (idxBarcode === -1 || idxName === -1) {
+					throw new Error("Header CSV phải có: barcode7 và item name (hoặc name).");
+				}
+
+				/** @type {CatalogRow[]} */
+				const rows = [];
+				for (let i = 1; i < matrix.length; i++) {
+					const r = matrix[i] ?? [];
+					const barcode7 = normalizeBarcode7(r[idxBarcode]);
+					const baseName = normalizeText(r[idxName]);
+					const itemCode = idxItemCode !== -1 ? normalizeText(r[idxItemCode]) : "";
+					const name = itemCode ? `${baseName} (${itemCode})` : baseName;
+
+					let shelf = idxShelf !== -1 ? normalizeText(r[idxShelf]) : "";
+					if (!shelf) {
+						const parts = [];
+						if (idxDivision !== -1) parts.push(normalizeText(r[idxDivision]));
+						if (idxCategory !== -1) parts.push(normalizeText(r[idxCategory]));
+						if (idxSubCategory !== -1) parts.push(normalizeText(r[idxSubCategory]));
+						shelf = parts.filter(Boolean).join(" / ");
+					}
+					if (barcode7.length !== 7) continue;
+					if (!name && !shelf) continue;
+					rows.push({ barcode7, name, shelf });
+				}
+				return rows;
+			}
+
+			async function importCatalogFromCsvFile(file) {
+				if (!file) return;
+				showCatalogStatus(`Đang import: ${file.name}…`, "");
+				try {
+					let text = "";
+					if (typeof file.text === "function") {
+						text = await file.text();
+					} else {
+						text = await new Promise((resolve, reject) => {
+							const reader = new FileReader();
+							reader.onload = () => resolve(String(reader.result ?? ""));
+							reader.onerror = () => reject(new Error("Không đọc được file."));
+							reader.readAsText(file);
+						});
+					}
+					const matrix = parseCsv(text);
+					const rows = parseCatalogRowsFromMatrix(matrix);
+					catalogCache = { rows, fetchedAt: Date.now() };
+					saveCatalogCache();
+					showCatalogStatus(`Catalog: ${rows.length} mã (import từ CSV).`, "ok");
+				} catch (err) {
+					showCatalogStatus(`Lỗi import CSV: ${err?.message ?? String(err)}`, "warn");
+				}
+			}
+
+			async function refreshCatalog() {
+				showCatalogStatus("Đang tải dữ liệu từ Google Sheet…", "");
+				try {
+					const rows = await fetchCatalogFromSheet();
+					catalogCache = { rows, fetchedAt: Date.now() };
+					saveCatalogCache();
+					showCatalogStatus(`Catalog: ${rows.length} mã (đã tải).`, "ok");
+				} catch (err) {
+					showCatalogStatus(`Lỗi catalog: ${err?.message ?? String(err)}`, "warn");
+				}
+			}
+
+			function findInCatalog(barcode7) {
+				const key = normalizeBarcode7(barcode7);
+				if (key.length !== 7) return null;
+				return catalogCache.rows.find((r) => r.barcode7 === key) ?? null;
+			}
+
+			function addByBarcode() {
+				const code = normalizeBarcode7(els.barcodeInput.value);
+				if (code.length !== 7) {
+					showCatalogStatus("Barcode phải đủ 7 số (hoặc dán full barcode để tự lấy 7 số cuối).", "warn");
+					els.barcodeInput.focus();
+					return;
+				}
+				const hit = findInCatalog(code);
+				if (!hit) {
+					showCatalogStatus(`Không tìm thấy mã ${code} trong catalog.`, "warn");
+					els.barcodeInput.select();
+					return;
+				}
+				items.unshift({ id: uid(), name: hit.name, shelf: hit.shelf, qty: null });
+				save();
+				render();
+				els.barcodeInput.value = "";
+				hideCatalogStatus();
+			}
+
+			function openCamera() {
+				els.cameraOverlay.classList.add('active');
+				if (typeof Html5Qrcode === 'undefined') {
+					alert('Thư viện quét mã vạch chưa tải. Vui lòng thử lại.');
+					return;
+				}
+				
+				html5QrcodeScanner = new Html5Qrcode("reader");
+				
+				const minDim = Math.min(window.innerWidth || 0, window.innerHeight || 0) || 360;
+				// Khung quét nhỏ hơn để bạn không phải dí camera sát mã vạch.
+				// (Giữ tỷ lệ gần giống barcode: ngang rộng hơn dọc.)
+				const qrboxWidth = Math.max(180, Math.min(240, Math.round(minDim * 0.55)));
+				const qrboxHeight = Math.round(qrboxWidth * 0.6);
+				
+				const config = {
+					fps: 10,
+					experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+					qrbox: { width: qrboxWidth, height: qrboxHeight },
+					formatsToSupport: [
+						Html5QrcodeSupportedFormats.EAN_13,
+						Html5QrcodeSupportedFormats.EAN_8,
+						Html5QrcodeSupportedFormats.CODE_128,
+						Html5QrcodeSupportedFormats.CODE_39,
+						Html5QrcodeSupportedFormats.UPC_A,
+						Html5QrcodeSupportedFormats.UPC_E
+					]
+				};
+
+				html5QrcodeScanner.start(
+					{ facingMode: "environment" },
+					config,
+					(decodedText) => {
+						// Lấy 7 số cuối
+						const barcode7 = normalizeBarcode7(decodedText);
+						if (barcode7.length === 7) {
+							els.barcodeInput.value = barcode7;
+							closeCamera();
+							// Tự động tra luôn
+							addByBarcode();
+						}
+					},
+					(errorMessage) => {
+						// Bỏ qua lỗi quét thông thường
+					}
+				).catch(err => {
+					alert('Không thể mở camera: ' + err);
+					closeCamera();
+				});
+			}
+
+			function closeCamera() {
+				if (html5QrcodeScanner) {
+					html5QrcodeScanner.stop().then(() => {
+						html5QrcodeScanner.clear();
+						html5QrcodeScanner = null;
+					}).catch(err => {
+						console.error('Lỗi đóng camera:', err);
+					});
+				}
+				els.cameraOverlay.classList.remove('active');
+			}
+
+			function computeTotal() {
+				return items.reduce((sum, it) => sum + (Number.isFinite(it.qty) ? it.qty : 0), 0);
+			}
+
+			function currentVisibleCount() {
+				const q = normalizeText(els.searchInput.value).toLowerCase();
+				if (!q) return items.length;
+				return items.filter((it) => (it.name + " " + it.shelf).toLowerCase().includes(q)).length;
+			}
+
+			function updateStats(visibleCount) {
+				els.statItems.textContent = String(visibleCount);
+				els.statTotal.textContent = String(computeTotal());
+			}
+
+			function render() {
+				const q = normalizeText(els.searchInput.value).toLowerCase();
+				const filtered = q
+					? items.filter((it) => (it.name + " " + it.shelf).toLowerCase().includes(q))
+					: items;
+
+				els.tbody.innerHTML = "";
+				for (const it of filtered) {
+					const frag = els.rowTemplate.content.cloneNode(true);
+					const tr = frag.querySelector("tr");
+					tr.dataset.id = it.id;
+
+					frag.querySelector('[data-field="name"]').textContent = it.name || "(Chưa đặt tên)";
+					frag.querySelector('[data-field="shelf"]').textContent = it.shelf || "-";
+
+					const qtyDisplay = frag.querySelector('[data-field="qty"]');
+					qtyDisplay.textContent = Number.isFinite(it.qty) ? String(it.qty) : "0";
+
+					els.tbody.appendChild(frag);
+				}
+
+				updateStats(filtered.length);
+			}
+
+			function addItem() {
+				const name = normalizeText(els.nameInput.value);
+				const shelf = normalizeText(els.shelfInput.value);
+				if (!name && !shelf) {
+					els.nameInput.focus();
+					return;
+				}
+				items.unshift({ id: uid(), name, shelf, qty: null });
+				els.nameInput.value = "";
+				els.shelfInput.value = "";
+				save();
+				render();
+			}
+
+			function setQty(id, qty) {
+				const idx = items.findIndex((x) => x.id === id);
+				if (idx === -1) return;
+				items[idx].qty = clampInt(qty);
+				save();
+				updateStats(currentVisibleCount());
+			}
+
+			function bumpQty(id, delta) {
+				const idx = items.findIndex((x) => x.id === id);
+				if (idx === -1) return;
+				const cur = Number.isFinite(items[idx].qty) ? items[idx].qty : 0;
+				items[idx].qty = Math.max(0, cur + delta);
+				save();
+				render();
+			}
+
+			function removeItem(id) {
+				items = items.filter((x) => x.id !== id);
+				save();
+				render();
+			}
+
+			function resetQuantities() {
+				items = items.map((x) => ({ ...x, qty: null }));
+				save();
+				render();
+			}
+
+			function clearAll() {
+				items = [];
+				save();
+				render();
+			}
+
+			function formatReport() {
+				const lines = items.map((it) => {
+					const qty = Number.isFinite(it.qty) ? String(it.qty) : "-";
+					return `${it.name || "(Chưa đặt tên)"} | ${it.shelf || "-"} | ${qty}`;
+				});
+				return lines.join("\n");
+			}
+
+			async function copyReport() {
+				const text = formatReport();
+				try {
+					await navigator.clipboard.writeText(text);
+					els.copyBtn.textContent = "Đã copy!";
+					setTimeout(() => (els.copyBtn.textContent = "Copy báo cáo"), 900);
+				} catch {
+					// Fallback
+					const ta = document.createElement("textarea");
+					ta.value = text;
+					ta.style.position = "fixed";
+					ta.style.left = "-9999px";
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand("copy");
+					document.body.removeChild(ta);
+					els.copyBtn.textContent = "Đã copy!";
+					setTimeout(() => (els.copyBtn.textContent = "Copy báo cáo"), 900);
+				}
+			}
+
+			// Events
+			els.addBtn.addEventListener("click", addItem);
+			els.scanBtn.addEventListener("click", openCamera);
+			els.closeCameraBtn.addEventListener("click", closeCamera);
+			els.lookupBtn.addEventListener("click", addByBarcode);
+			els.searchInput.addEventListener("input", render);
+			els.copyBtn.addEventListener("click", copyReport);
+			els.resetBtn.addEventListener("click", () => {
+				if (confirm("Reset tất cả số lượng về trống?")) resetQuantities();
+			});
+			els.clearBtn.addEventListener("click", () => {
+				if (confirm("Xóa toàn bộ danh sách hàng? (Không thể hoàn tác)")) clearAll();
+			});
+
+			// Enter to add quickly
+			[els.nameInput, els.shelfInput].forEach((el) => {
+				el.addEventListener("keydown", (e) => {
+					if (e.key === "Enter") addItem();
+				});
+			});
+
+			els.barcodeInput.addEventListener("keydown", (e) => {
+				if (e.key === "Enter") addByBarcode();
+			});
+
+			els.saveSheetBtn.addEventListener("click", () => {
+				catalogSettings.sheetCsvUrl = normalizeText(els.sheetUrlInput.value);
+				saveCatalogSettings();
+				showCatalogStatus("Đã lưu URL. Bấm 'Tải lại dữ liệu' để cập nhật.", "ok");
+			});
+
+			els.refreshCatalogBtn.addEventListener("click", refreshCatalog);
+
+			els.importCsvBtn.addEventListener("click", () => {
+				els.csvFileInput.value = "";
+				els.csvFileInput.click();
+			});
+
+			els.csvFileInput.addEventListener("change", async () => {
+				const file = els.csvFileInput.files?.[0];
+				await importCatalogFromCsvFile(file);
+			});
+
+			// Delegate clicks/inputs inside table
+			els.tbody.addEventListener("click", (e) => {
+				const btn = e.target.closest("button[data-action]");
+				if (!btn) return;
+				const tr = e.target.closest("tr");
+				if (!tr) return;
+				const id = tr.dataset.id;
+				const action = btn.dataset.action;
+				if (action === "inc") bumpQty(id, +1);
+				if (action === "inc5") bumpQty(id, +5);
+				if (action === "dec") bumpQty(id, -1);
+				if (action === "dec5") bumpQty(id, -5);
+				if (action === "remove") {
+					removeItem(id);
+				}
+			});
+
+			// Init
+			loadCatalogSettings();
+			loadCatalogCache();
+			els.sheetUrlInput.value = catalogSettings.sheetCsvUrl;
+			if (catalogCache.rows.length > 0) {
+				showCatalogStatus(`Catalog: ${catalogCache.rows.length} mã (cache).`, "ok");
+			}
+
+			load();
+			seedIfEmpty();
+			save();
+			render();
+		</script>
+	</body>
+</html>
