@@ -506,6 +506,38 @@
 				flex-wrap: wrap;
 			}
 
+			.scan-toast {
+				position: absolute;
+				top: 58px;
+				left: 12px;
+				z-index: 2;
+				max-width: calc(100% - 24px);
+				padding: 8px 10px;
+				border-radius: 10px;
+				border: 1px solid var(--border);
+				background: rgba(17, 24, 39, 0.92);
+				color: var(--text);
+				font-size: 12px;
+				line-height: 1.25;
+				text-align: left;
+				display: none;
+				cursor: pointer;
+			}
+
+			.scan-toast.show {
+				display: block;
+			}
+
+			.scan-toast.ok {
+				border-color: rgba(34, 197, 94, 0.55);
+				background: rgba(34, 197, 94, 0.12);
+			}
+
+			.scan-toast.warn {
+				border-color: rgba(245, 158, 11, 0.65);
+				background: rgba(245, 158, 11, 0.12);
+			}
+
 			.btn.scan-icon {
 				display: inline-flex;
 				align-items: center;
@@ -618,6 +650,7 @@
 					<h3>Quét mã vạch</h3>
 					<button id="closeCameraBtn" class="camera-close" type="button">✕</button>
 				</div>
+				<button id="scanToast" class="scan-toast" type="button" aria-live="polite" aria-label="Thông báo quét (bấm để ẩn)"></button>
 				<div id="cameraControls" class="camera-controls" style="display: none">
 					<button id="torchBtn" class="btn" type="button" style="display: none">Đèn: Tắt</button>
 				</div>
@@ -675,6 +708,7 @@
 				csvFileInput: document.getElementById("csvFileInput"),
 				cameraOverlay: document.getElementById("cameraOverlay"),
 				closeCameraBtn: document.getElementById("closeCameraBtn"),
+				scanToast: document.getElementById("scanToast"),
 				cameraControls: document.getElementById("cameraControls"),
 				torchBtn: document.getElementById("torchBtn"),
 				cameraInfo: document.getElementById("cameraInfo"),
@@ -689,6 +723,9 @@
 
 			let html5QrcodeScanner = null;
 			let cameraTorchOn = false;
+			let lastScanKey = "";
+			let lastScanAt = 0;
+			const SCAN_DEDUP_MS = 1400;
 
 			const CATALOG_SETTINGS_KEY = "fill-counter:catalog-settings:v1";
 			const CATALOG_CACHE_KEY = "fill-counter:catalog-cache:v1";
@@ -1031,6 +1068,31 @@
 				if (els.cameraInfo) els.cameraInfo.textContent = message;
 			}
 
+			function hideScanToast() {
+				if (!els.scanToast) return;
+				els.scanToast.classList.remove("show", "ok", "warn");
+				els.scanToast.textContent = "";
+			}
+
+			function showScanToast(message, kind) {
+				if (!els.scanToast) return;
+				els.scanToast.textContent = String(message ?? "");
+				els.scanToast.classList.remove("ok", "warn");
+				if (kind === "ok" || kind === "warn") els.scanToast.classList.add(kind);
+				els.scanToast.classList.add("show");
+			}
+
+			function tryAddItemFromBarcode7(barcode7) {
+				const code = normalizeBarcode7(barcode7);
+				if (code.length !== 7) return { ok: false, code, message: "Mã không hợp lệ (cần 7 số cuối)." };
+				const hit = findInCatalog(code);
+				if (!hit) return { ok: false, code, message: `Không tìm thấy mã ${code} trong catalog.` };
+				items.unshift({ id: uid(), name: hit.name, shelf: hit.shelf, qty: null });
+				save();
+				render();
+				return { ok: true, code, message: `Đã thêm: ${hit.name}` };
+			}
+
 			async function tryApplyVideoConstraints(constraints) {
 				if (!html5QrcodeScanner) return false;
 				if (typeof html5QrcodeScanner.applyVideoConstraints !== "function") return false;
@@ -1049,7 +1111,7 @@
 				if (els.torchBtn) els.torchBtn.style.display = "none";
 
 				if (!html5QrcodeScanner || typeof html5QrcodeScanner.getRunningTrackCapabilities !== "function") {
-					setCameraInfo("Tip: Nếu máy hỗ trợ, sẽ hiện Zoom/Đèn ở đây.");
+					setCameraInfo("Tip: Nếu máy hỗ trợ, sẽ hiện nút Đèn ở đây (và có thể tự set zoom 2.0x).");
 					return;
 				}
 
@@ -1058,7 +1120,7 @@
 				try {
 					caps = await html5QrcodeScanner.getRunningTrackCapabilities();
 				} catch {
-					setCameraInfo("Tip: Nếu máy hỗ trợ, sẽ hiện Zoom/Đèn ở đây.");
+					setCameraInfo("Tip: Nếu máy hỗ trợ, sẽ hiện nút Đèn ở đây (và có thể tự set zoom 2.0x).");
 					return;
 				}
 
@@ -1066,7 +1128,7 @@
 				const hasTorch = !!(caps && (caps.torch === true || (typeof caps.torch === "object" && caps.torch))); // tùy browser
 
 				if (!hasZoom && !hasTorch) {
-					setCameraInfo("Tip: Máy này có thể không hỗ trợ Zoom/Đèn qua trình duyệt.");
+					setCameraInfo("Tip: Máy này có thể không hỗ trợ Đèn/Zoom qua trình duyệt.");
 					return;
 				}
 
@@ -1101,6 +1163,9 @@
 
 			function openCamera() {
 				els.cameraOverlay.classList.add('active');
+				hideScanToast();
+				lastScanKey = "";
+				lastScanAt = 0;
 				if (typeof Html5Qrcode === 'undefined') {
 					alert('Thư viện quét mã vạch chưa tải. Vui lòng thử lại.');
 					return;
@@ -1135,18 +1200,29 @@
 					(decodedText) => {
 						// Lấy 7 số cuối
 						const barcode7 = normalizeBarcode7(decodedText);
-						if (barcode7.length === 7) {
-							els.barcodeInput.value = barcode7;
-							closeCamera();
-							// Tự động tra luôn
-							addByBarcode();
+						if (barcode7.length !== 7) {
+							showScanToast("Mã quét không hợp lệ (cần 7 số cuối).", "warn");
+							return;
+						}
+
+						const now = Date.now();
+						if (barcode7 === lastScanKey && now - lastScanAt < SCAN_DEDUP_MS) return;
+						lastScanKey = barcode7;
+						lastScanAt = now;
+
+						els.barcodeInput.value = barcode7;
+						const result = tryAddItemFromBarcode7(barcode7);
+						if (result.ok) {
+							showScanToast(`${barcode7} • ${result.message}`, "ok");
+						} else {
+							showScanToast(`${barcode7} • ${result.message}`, "warn");
 						}
 					},
 					(errorMessage) => {
 						// Bỏ qua lỗi quét thông thường
 					}
 				).then(() => {
-					setCameraInfo("Tip: Nếu quét xa khó, thử tăng Zoom hoặc bật Đèn (nếu có).");
+					setCameraInfo("Tip: Nếu quét xa khó, thử bật Đèn (nếu có). Máy sẽ tự set zoom 2.0x nếu hỗ trợ.");
 					setupCameraAdvancedControls();
 				}).catch(err => {
 					alert('Không thể mở camera: ' + err);
@@ -1166,6 +1242,7 @@
 				cameraTorchOn = false;
 				if (els.cameraControls) els.cameraControls.style.display = "none";
 				if (els.torchBtn) els.torchBtn.style.display = "none";
+				hideScanToast();
 				els.cameraOverlay.classList.remove('active');
 			}
 
@@ -1290,6 +1367,7 @@
 			els.addBtn.addEventListener("click", addItem);
 			els.scanBtn.addEventListener("click", openCamera);
 			els.closeCameraBtn.addEventListener("click", closeCamera);
+			if (els.scanToast) els.scanToast.addEventListener("click", hideScanToast);
 			els.lookupBtn.addEventListener("click", addByBarcode);
 			els.searchInput.addEventListener("input", render);
 			els.copyBtn.addEventListener("click", copyReport);
